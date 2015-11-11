@@ -1,28 +1,24 @@
-import argparse
 import json
-import pprint
-import sys
 import urllib
 import urllib2
 import cnfg
-import urlparse
 import os
 import time
 import pickle
 import requests
 import oauth2
 from bs4 import BeautifulSoup
-from sys import argv
+from pymongo import MongoClient
 
 config = cnfg.load(".yelp/.yelp_config")
 
 OUTPUTDIR = 'output'
-FILENAMETEMPLATE = 'business_dicts'
 
-API_HOST = 'api.yelp.com'
 DEFAULT_TERM = 'pizza'
 DEFAULT_LOCATION = 'New York, NY'
-DEFAULT_RADIUS = 200
+DEFAULT_RADIUS = 300
+
+API_HOST = 'api.yelp.com'
 SEARCH_LIMIT = 20
 SEARCH_PATH = '/v2/search/'
 BUSINESS_PATH = '/v2/business/'
@@ -32,6 +28,11 @@ CONSUMER_KEY = config["consumer_key"]
 CONSUMER_SECRET = config["consumer_secret"]
 TOKEN = config["access_token"]
 TOKEN_SECRET = config["access_token_secret"]
+
+client = MongoClient()
+db = MongoClient().yelpdb
+collection = db.review_collection
+
 
 def request(host, path, url_params=None):
 
@@ -71,7 +72,7 @@ def request(host, path, url_params=None):
 
     return response
 
-def get_business_ids(term = DEFAULT_TERM, location = DEFAULT_LOCATION, radius = DEFAULT_RADIUS, maxlimit=20):
+def get_business_ids(term, location, radius, maxlimit=20):
 
     """Function to get the business_ids from the yelp API.
 
@@ -106,7 +107,9 @@ def get_business_ids(term = DEFAULT_TERM, location = DEFAULT_LOCATION, radius = 
     return businesses
 
 def create_dir(directory):
-    #Check to see if directory exists
+    """Check to see if directory exists, if not creates a directory
+    """
+
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -125,7 +128,7 @@ def get_soup_from_url(url):
 
 def get_business_url(business_id, base = 'http://www.yelp.com/biz/'):
 
-    """ Takes business_id and returns the url for a business.
+    """Takes business_id and returns the url for a business.
 
     Args:
         business_id (str): A unique business id for each Yelp business
@@ -139,7 +142,7 @@ def get_business_url(business_id, base = 'http://www.yelp.com/biz/'):
 
 def get_number_reviews(business_id):
 
-    """ Gets the unique number of reviews for a business.
+    """Gets the unique number of reviews for a business.
 
     Args:
         business_id (str): A unique business id for each Yelp business
@@ -154,12 +157,12 @@ def get_number_reviews(business_id):
 
 def get_all_reviews_for_business(business_id, max_limit = 20):
 
-    """ Get all the reviews for a business.
+    """Gets all of customer reviews for a business.
 
     Args:
         business_id (str): A unique business id for each Yelp business
     Returns:
-        reviews (list): A list of all the reviews reviews for a business.
+        reviews (list): All the reviews for a given business.
     """ 
 
     reviews = []
@@ -170,45 +173,100 @@ def get_all_reviews_for_business(business_id, max_limit = 20):
     
     while counter <= num_reviews:
         soup = get_soup_from_url(new_url)
-        for elem in soup.find(class_ = 'review-list').find_all(itemprop='description'):
-            reviews.append(elem.text)
+        review_list = soup.find(class_ = 'review-list')
+        for review in review_list.find_all(itemprop='description'):
+            reviews.append(review.text)
         counter += max_limit
-        new_url = '{}?start={}'.format(url, counter)
+        new_url = '{0}?start={1}'.format(url, counter)
     return reviews
 
-def make_business_reviews_dict(business_ids):
+def get_all_scores_for_business(business_id, max_limit = 20):
 
-    """ Creates a dictionary that using the business_id as a key and a list of the reviews as a value.
+    """Gets all of customer review scores for a business.
 
     Args:
         business_id (str): A unique business id for each Yelp business
     Returns:
-        d (dict): A dictionary that has the business_id as a key and a list of the reviews as a value.
+        scores (list): All the review scores for a given business.
     """ 
 
+    scores = []
+    counter = 0
+    url = get_business_url(business_id)
+    new_url = url
+    num_reviews = get_number_reviews(business_id)
+    
+    while counter <= num_reviews:
+        soup = get_soup_from_url(new_url)
+        review_list = soup.find(class_ = 'review-list')
+        for score in review_list.find_all(class_ = 'rating-very-large'):
+            try:
+                rating = float(score.find(itemprop = 'ratingValue')['content'][0])
+                scores.append(rating)
+            except:
+                pass
+        counter += max_limit
+        new_url = '{0}?start={1}'.format(url, counter)
+    return scores
+
+def create_business_dictionary(business_id, outputdir):
+
+    """Creates a dictionary for a business with the keys: 'name', 'reviews', 'scores'.
+
+    Args:
+        business_id (str): A unique business id for each Yelp business
+        outputdir (str): A specified path for where the output should be created
+    Returns:
+        d (dict): A dictionary for a given business
+    """ 
+
+    print ("Processing {0} dictionary...").format(business_id)
     d = {}
-    for business_id in business_ids:
-        d[business_id] = get_all_reviews_for_business(business_id)
-    return d
+    d['name'] = business_id
+    d['reviews'] = get_all_reviews_for_business(business_id)
+    d['scores'] = get_all_scores_for_business(business_id)
+    create_dir(outputdir)
+    output_path = os.path.join(outputdir, '{0}.p'.format(business_id))
+    pickle.dump(d, open('{}'.format(output_path), 'wb'))
+    print (">>> Output saved to {0}").format(output_path)   
+
+    return d    
+
+def load_mongodb_data(db, collection, term, location, radius):
+    
+    mypath = os.path.join(OUTPUTDIR, '{0}_{1}_{2}'.format(term, location, radius))
+    filelist = [os.path.join(mypath, f) for f in os.listdir(mypath) if f.endswith(".p") ]
+    collection.drop()
+
+    for f in filelist:
+        with open(f, 'r') as infile:
+            dictionary = pickle.load(infile)
+
+        for review in dictionary['reviews']:
+            collection.insert_one({'name':dictionary['name'], 'review':review})
 
 def main():
 
     start_time = time.time()
-    term = raw_input('What food would you like to search for? ')
-    location = raw_input('What is your location? ')
-    radius = raw_input('What is your search radius (in meters)? ')
+    # term = raw_input('What food would you like to search for? ')
+    # location = raw_input('What is your location? ')
+    # radius = raw_input('What is your search radius (in meters)? ')
+
+    term = DEFAULT_TERM
+    location = DEFAULT_LOCATION
+    radius = DEFAULT_RADIUS
+
+    location = location.replace(" ","")
     print ("Getting your restaurant reviews...")
     business_ids = get_business_ids(term, location, radius)
-
-    create_dir(OUTPUTDIR)
-    output_path = os.path.join(OUTPUTDIR, '{0}_{1}_{2}_{3}.p'.format(FILENAMETEMPLATE, term, location, radius))
-
-    d = make_business_reviews_dict(business_ids)
-    pickle.dump(d, open('{}'.format(output_path.replace(' ','')), 'wb'))
-
+    for business_id in business_ids:
+        outputdir = os.path.join(OUTPUTDIR, '{0}_{1}_{2}'.format(term, location, radius))
+        create_business_dictionary(business_id, outputdir)
     print ("--- %s seconds ---") % (time.time() - start_time)
-    print ("Dictionary created successfully!")
-    print ("Output saved to {0}").format(output_path)
+    print ("Dictionaries created successfully!")
+
+    load_mongodb_data(db, collection, term, location, radius)
+
 
 if __name__ == '__main__':
     main()
