@@ -10,7 +10,6 @@ import oauth2
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
-
 config = cnfg.load(".yelp/.yelp_config")
 
 OUTPUTDIR = 'output'
