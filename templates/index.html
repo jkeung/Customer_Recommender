@@ -1,0 +1,142 @@
+<html>
+
+  <head>
+    <title> {{ title }} </title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 20;
+        padding: 20;
+      }
+
+      #map {
+        height: 80%;
+        width: 50%;
+
+      }
+
+      .center {
+	    margin: auto;
+	    width: 60%;
+	    border:3px solid #73AD21;
+	    padding: 10px;
+	  }
+
+
+    </style>
+    
+    <h1><center>Best Slice in NYC!</center></h1>
+
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <strong><link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}"></strong>
+  </head>
+  <body>
+
+
+
+    <div id="map" style="width:800px; margin:0 auto;"></div>
+    <script type="text/javascript">
+
+				function initMap() {
+
+				    var map = new google.maps.Map(document.getElementById('map'), {
+				      zoom: 14,
+				      center: new google.maps.LatLng(40.7127, -74.0059),
+				      mapTypeId: google.maps.MapTypeId.ROADMAP
+				    });
+					var infowindow = new google.maps.InfoWindow();
+				    
+				    {% for restaurant in restaurants %}
+
+			        var markerLatlng = new google.maps.LatLng({{restaurant.coordinate.latitude}}, {{restaurant.coordinate.longitude}});
+				    var title = '{{restaurant.name}}'
+				    var iwContent = '<div id="content">'+
+      								'<div id="siteNotice">'+
+      								'</div>'+
+      								'<h1 id="firstHeading" class="firstHeading">' + '{{restaurant.name}}' + '</h1>'+
+      								'<div id="bodyContent">'+
+      								'<p>' +
+      								'Sentiment Score: ' + '{{restaurant.sentiment_scores}}' + '<br>' + 
+      								'Trending Words: ' + '{{restaurant.words}}' + '<br>' + 
+      								'<img src="' + '{{restaurant.image}}' + '"><br>' + 
+      								'<a href="http://www.yelp.com/biz/' + '{{restaurant.id}}' + '">' + 'Visit Yelp Website' + '</a><br>' 
+
+      
+
+				    createMarker(markerLatlng ,title,iwContent);
+
+				    function createMarker(latlon,title,iwContent) {
+				      var marker = new google.maps.Marker({
+				          position: latlon,
+				          title: title,
+				          animation: google.maps.Animation.DROP,
+				          map: map,
+				          icon: 'http://icons.iconarchive.com/icons/sonya/swarm/48/Pizza-icon.png'
+				    	});
+
+				      marker.addListener('click', toggleBounce);
+
+				      function toggleBounce() {
+					  if (marker.getAnimation() !== null) {
+					    marker.setAnimation(null);
+					  } else {
+					    marker.setAnimation(google.maps.Animation.BOUNCE);
+					  }
+					}
+
+
+					google.maps.event.addListener(marker, 'click', function () {
+					    infowindow.setContent(iwContent);
+					    infowindow.open(map, marker);
+					    });
+
+					    }
+
+					
+
+					{% endfor %}
+
+
+					};
+
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1teuAWuZPQJRjQUFEUDxccDUniz46o28&callback=initMap"
+        async defer></script>
+
+
+
+  	<table align = "center">
+  	  <tr>
+  	  	<th> Restaurant </th>
+  	  	<th> Sentiment Score </th>
+  	  	<th> Rating </th>
+  	  	<th> Trending Words </th>
+  	  	<th> Neighborhood </th>
+
+  	  </tr>
+  		{% for restaurant in restaurants %}
+  	  <tr>
+
+  	  	<td> 
+  	  		<script>
+  	  		burl = "http://www.yelp.com/biz/"
+  	  		document.write('<a href="' + burl + '{{restaurant.id}} "> {{restaurant.name}} </a>'); 
+  	  		</script>
+  	  	</td>
+      	<td> {{ restaurant.sentiment_scores }} </td>
+      	<td> {{ restaurant.rating }} </td>
+      	<td> {% for word in restaurant.words %} "{{ word }}" {% endfor %} </td>
+      	<td> {% for word in restaurant.neighborhood %} {{ word }} {% endfor %} </td>
+
+      </tr>
+      	{% endfor %}
+
+     </table>
+
+
+
+
+  </body>
+</html>

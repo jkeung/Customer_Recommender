@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import json
 import urllib
 import urllib2
@@ -9,6 +10,7 @@ import requests
 import oauth2
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
+import unicodedata
 
 config = cnfg.load(".yelp/.yelp_config")
 
@@ -16,7 +18,7 @@ OUTPUTDIR = 'output'
 
 DEFAULT_TERM = 'pizza'
 DEFAULT_LOCATION = 'New York, NY'
-DEFAULT_RADIUS = 300
+DEFAULT_RADIUS = 2000
 
 API_HOST = 'api.yelp.com'
 SEARCH_LIMIT = 20
@@ -37,6 +39,7 @@ collection = db.review_collection
 def request(host, path, url_params=None):
 
     """Prepares OAuth authentication and sends the request to the API.
+
     Args:
         host (str): The domain host of the API.
         path (str): The path of the API after the domain.
@@ -106,10 +109,31 @@ def get_business_ids(term, location, radius, maxlimit=20):
         offset += n_records
     return businesses
 
-def create_dir(directory):
-    """Check to see if directory exists, if not creates a directory
+def get_business(business_id):
+
+    """Query the Business API by a business ID.
+
+    Args:
+        business_id (str): The ID of the business to query.
+    Returns:
+        dict: The JSON response from the request.
     """
 
+    business_path = BUSINESS_PATH + business_id
+
+    return request(API_HOST, business_path)
+
+def create_dir(directory):
+
+    """Creates directory if doesn't exist
+
+    Args:
+        directory: Name of the output directory
+    Returns:
+        None
+    """
+
+    #Check to see if directory exists
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -220,30 +244,53 @@ def create_business_dictionary(business_id, outputdir):
         d (dict): A dictionary for a given business
     """ 
 
-    print ("Processing {0} dictionary...").format(business_id)
-    d = {}
-    d['name'] = business_id
-    d['reviews'] = get_all_reviews_for_business(business_id)
-    d['scores'] = get_all_scores_for_business(business_id)
+    # creates outputdir and check to see if output path exists
     create_dir(outputdir)
-    output_path = os.path.join(outputdir, '{0}.p'.format(business_id))
-    pickle.dump(d, open('{}'.format(output_path), 'wb'))
-    print (">>> Output saved to {0}").format(output_path)   
+    output_file = os.path.join(outputdir, '{0}.p'.format(business_id))
+    print output_file
+    #Check to see if file exists
+    try:
+        # if exists load from loacl
+        d = pickle.load(open('{}'.format(output_file), 'rb'))
+        print "Loading {} dictionary from local".format(business_id)
+    except:
+        # get the data from source
+        print ("Processing {0} dictionary...").format(business_id)
+        d = {}
+        info  = get_business(business_id)
+        for key, value in info.items():
+            d[key] = value
+        # overwrites reviews
+        d['reviews'] = get_all_reviews_for_business(business_id)
+        d['sentiment_scores'] = get_all_scores_for_business(business_id)
+        d['id'] = business_id
 
+        pickle.dump(d, open('{}'.format(output_file), 'wb'))
+        print (">>> Output saved to {0}").format(output_file)   
     return d    
 
 def load_mongodb_data(db, collection, term, location, radius):
     
-    mypath = os.path.join(OUTPUTDIR, '{0}_{1}_{2}'.format(term, location, radius))
-    filelist = [os.path.join(mypath, f) for f in os.listdir(mypath) if f.endswith(".p") ]
+    """Loads data into a MongoDB
+
+    Args:
+        db (str): MongoDB database name
+        collection (str): MongoDB collection name
+        term (str): Search term
+        location (str): Search location
+        radius (int): Search radius
+    Returns:
+        None
+    """ 
+
+    outputdir = os.path.join(OUTPUTDIR)
+    filelist = [os.path.join(outputdir, f) for f in os.listdir(outputdir) if f.endswith(".p") ]
     collection.drop()
 
     for f in filelist:
         with open(f, 'r') as infile:
             dictionary = pickle.load(infile)
-
-        for review in dictionary['reviews']:
-            collection.insert_one({'name':dictionary['name'], 'review':review})
+            collection.insert_one(dictionary)
 
 def main():
 
@@ -260,13 +307,15 @@ def main():
     print ("Getting your restaurant reviews...")
     business_ids = get_business_ids(term, location, radius)
     for business_id in business_ids:
-        outputdir = os.path.join(OUTPUTDIR, '{0}_{1}_{2}'.format(term, location, radius))
+        business_id = unicodedata.normalize('NFKD', business_id).encode('ascii','ignore')
+        outputdir = os.path.join(OUTPUTDIR)
         create_business_dictionary(business_id, outputdir)
     print ("--- %s seconds ---") % (time.time() - start_time)
     print ("Dictionaries created successfully!")
 
+    print ("Loading data into MongoDB...")
     load_mongodb_data(db, collection, term, location, radius)
-
+    print ("Loading data into MongoDB complete!")
 
 if __name__ == '__main__':
     main()
