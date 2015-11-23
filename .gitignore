@@ -1,0 +1,5 @@
+# data files
+*.p
+
+# compiled files
+*.pyc
