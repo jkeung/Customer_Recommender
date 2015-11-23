@@ -16,9 +16,9 @@ config = cnfg.load(".yelp/.yelp_config")
 
 OUTPUTDIR = 'output'
 
-DEFAULT_TERM = 'pizza'
-DEFAULT_LOCATION = 'New York, NY'
-DEFAULT_RADIUS = 2000
+# DEFAULT_TERM = 'pizza'
+# DEFAULT_LOCATION = 'New York, NY'
+# DEFAULT_RADIUS = 2000
 
 API_HOST = 'api.yelp.com'
 SEARCH_LIMIT = 20
@@ -295,13 +295,13 @@ def load_mongodb_data(db, collection, term, location, radius):
 def main():
 
     start_time = time.time()
-    # term = raw_input('What food would you like to search for? ')
-    # location = raw_input('What is your location? ')
-    # radius = raw_input('What is your search radius (in meters)? ')
+    term = raw_input('What food would you like to search for? ')
+    location = raw_input('What is your location? ')
+    radius = raw_input('What is your search radius (in meters)? ')
 
-    term = DEFAULT_TERM
-    location = DEFAULT_LOCATION
-    radius = DEFAULT_RADIUS
+    # term = DEFAULT_TERM
+    # location = DEFAULT_LOCATION
+    # radius = DEFAULT_RADIUS
 
     location = location.replace(" ","")
     print ("Getting your restaurant reviews...")

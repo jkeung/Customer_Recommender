@@ -269,7 +269,7 @@ def get_json(db, collection, term):
 
 def main():
     n_grams = 1
-    term = 'pizza'
+    term = raw_input("What search term would you like to filter for?")
     num_restaurants = 10
     num_reviews = 5
     num_words = 10
