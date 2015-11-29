@@ -12,6 +12,7 @@ from textblob import TextBlob
 from operator import itemgetter
 from pprint import pprint
 import collections
+import unicodedata
 
 
 db = MongoClient().yelpdb
@@ -106,7 +107,7 @@ def get_trending_words(db, collection, term, restaurant, ngram = 2, num_words = 
 
         # track words that appear often and filter out stopwords
         words = wordpunct_tokenize(rev)
-        words = [w for w in words if w not in stop]
+        words = [unicodedata.normalize('NFKD', w).encode('ascii','ignore') for w in words if w not in stop]
         # words = [word for word, pos in pos_tag(words) if pos in ['JJ', 'JJR', 'JJS', 'RB', 'RBR', 'RBS'] and word not in stop]
 
         # get bigrams and store in dictionary
@@ -275,7 +276,7 @@ def main():
     num_words = 10
     print ("Getting list of dictionaries...")
     lst = get_json(db, collection, term)
-    print ("Clearning MongoDB Collection...")
+    print ("Clearing MongoDB Collection...")
     collection2.drop()
     print ("Loading MongoDB Collection...")
     for restaurant in lst:

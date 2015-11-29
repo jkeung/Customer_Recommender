@@ -11,7 +11,15 @@ import oauth2
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 import unicodedata
+# import socks
+# import socket
 
+
+# socks.setdefaultproxy(proxy_type=socks.PROXY_TYPE_SOCKS5, addr="127.0.0.1", port=9050)
+# socket.socket = socks.socksocket
+
+print requests.get("http://icanhazip.com").text
+print requests.get("http://www.yelp.com/biz/99-cent-express-pizza-new-york").text
 config = cnfg.load(".yelp/.yelp_config")
 
 OUTPUTDIR = 'output'
@@ -34,7 +42,6 @@ TOKEN_SECRET = config["access_token_secret"]
 client = MongoClient()
 db = MongoClient().yelpdb
 collection = db.review_collection
-
 
 def request(host, path, url_params=None):
 
@@ -247,7 +254,7 @@ def create_business_dictionary(business_id, outputdir):
     # creates outputdir and check to see if output path exists
     create_dir(outputdir)
     output_file = os.path.join(outputdir, '{0}.p'.format(business_id))
-    print output_file
+
     #Check to see if file exists
     try:
         # if exists load from loacl
@@ -269,7 +276,7 @@ def create_business_dictionary(business_id, outputdir):
         print (">>> Output saved to {0}").format(output_file)   
     return d    
 
-def load_mongodb_data(db, collection, term, location, radius):
+def load_mongodb_data(db, collection, business_ids):
     
     """Loads data into a MongoDB
 
@@ -283,11 +290,11 @@ def load_mongodb_data(db, collection, term, location, radius):
         None
     """ 
 
-    outputdir = os.path.join(OUTPUTDIR)
-    filelist = [os.path.join(outputdir, f) for f in os.listdir(outputdir) if f.endswith(".p") ]
     collection.drop()
 
-    for f in filelist:
+    for business_id in business_ids:
+        business_id = unicodedata.normalize('NFKD', business_id).encode('ascii','ignore')
+        f = os.path.join(OUTPUTDIR,'{0}.p'.format(business_id))
         with open(f, 'r') as infile:
             dictionary = pickle.load(infile)
             collection.insert_one(dictionary)
@@ -314,7 +321,7 @@ def main():
     print ("Dictionaries created successfully!")
 
     print ("Loading data into MongoDB...")
-    load_mongodb_data(db, collection, term, location, radius)
+    load_mongodb_data(db, collection, business_ids)
     print ("Loading data into MongoDB complete!")
 
 if __name__ == '__main__':
