@@ -8,14 +8,16 @@ import time
 import pickle
 import requests
 import oauth2
+import unicodedata
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
-import unicodedata
+from ..helper import create_dir, get_soup_from_url
+from food_finder.config import settings
+
 
 class Yelp(object):
-    CONFIG = cnfg.load(".yelp/.yelp_config")
 
-    OUTPUTDIR = 'output'
+    OUTPUTDIR = settings.get('output')
 
     API_HOST = 'api.yelp.com'
     SEARCH_LIMIT = 20
@@ -23,14 +25,15 @@ class Yelp(object):
     BUSINESS_PATH = '/v2/business/'
 
     # OAuth credential placeholders that must be filled in by users.
-    CONSUMER_KEY = CONFIG["consumer_key"]
-    CONSUMER_SECRET = CONFIG["consumer_secret"]
-    TOKEN = CONFIG["access_token"]
-    TOKEN_SECRET = CONFIG["access_token_secret"]
+    CONSUMER_KEY = settings.get('consumer_key')
+    CONSUMER_SECRET = settings.get('consumer_secret')
+    TOKEN = settings.get('access_token')
+    TOKEN_SECRET = settings.get('access_token_secret')
 
-    DB = MongoClient().yelpdb
-    COLLECTION = DB.review_collection
-    
+    # use exec in order to combine strings from config file with commands
+    exec 'DB = MongoClient().{0}'.format(settings.get('database'))
+    exec 'COLLECTION = DB.{0}'.format(settings.get('collection'))
+
     def __init__(self):
         self.term = raw_input('What food would you like to search for? ')
         self.location = raw_input('What is your location? ').replace(" ","")
@@ -75,7 +78,7 @@ class Yelp(object):
 
         return response
 
-    def get_business_ids(self, term, location, radius, maxlimit=20):
+    def get_business_ids(self, term, location, radius, maxlimit=10000):
 
         """Function to get the business_ids from the yelp API.
 
@@ -92,22 +95,31 @@ class Yelp(object):
         offset = 0
         businesses = []
         resume = True
+
+        # iterate and collect business ids from Yelp
         while resume:
             url_params = {
                 'term': term.replace(' ', '+'),
                 'location': location.replace(' ', '+'),
-                'limit': maxlimit,
+                'limit': 20,
                 'radius_filter': radius,
                 'offset': offset
             }
             output = self.request(self.API_HOST, self.SEARCH_PATH, url_params = url_params)
             n_records = len(output['businesses'])
-            if n_records < 20:
+            # last set of businesses
+            # if n_records < 20:
+            #     resume = False
+            # only retrieve maxlimit number of reviews or num records < 20
+            if offset > maxlimit-20 or n_records < 20:
                 resume = False
+            # append range of ids to list
             for i in range(n_records):
-                businesses.append(output['businesses'][i]['id']) 
+                # encode to ascii
+                business = unicodedata.normalize('NFKD', output['businesses'][i]['id']).encode('ascii','ignore')
+                yield business
+            # adjust offset
             offset += n_records
-        return businesses
 
     def get_business(self, business_id):
 
@@ -123,32 +135,6 @@ class Yelp(object):
 
         return self.request(self.API_HOST, business_path)
 
-    def create_dir(self, directory):
-
-        """Creates directory if doesn't exist
-
-        Args:
-            directory: Name of the output directory
-        Returns:
-            None
-        """
-
-        #Check to see if directory exists
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-    def get_soup_from_url(self, url):
-
-        """Takes url and returns bs4.BeautifulSoup class.
-
-        Args:
-            url (str): A string for the url
-        Returns:
-            soup (bs4.BeautifulSoup): The beautiful soup object of a given url.
-
-        """    
-        soup = BeautifulSoup(requests.get(url).text, 'lxml')
-        return soup
 
     def get_business_url(self, business_id, base = 'http://www.yelp.com/biz/'):
 
@@ -164,6 +150,7 @@ class Yelp(object):
         business_url = base + business_id
         return business_url
 
+
     def get_number_reviews(self, business_id):
 
         """Gets the unique number of reviews for a business.
@@ -175,45 +162,63 @@ class Yelp(object):
         """ 
 
         url = self.get_business_url(business_id)
-        soup = self.get_soup_from_url(url)
+        soup = get_soup_from_url(url)
         number_reviews = int(soup.find(itemprop = 'reviewCount').text)
         return number_reviews
 
 
     def get_business_review_info(self, business_id, max_limit = 20):
+
+        """Gets the unique reviews for a business.
+
+        Args:
+            business_id (str): A unique business id for each Yelp business
+            max_limit (int): Maximum number of requests that can be retrieved
+        Returns:
+            reviews (list): A list of dictionaries. Each dictionary contains a single review by 
+            user containing the date, the review, and the rating.
+        """ 
+
         url = self.get_business_url(business_id)
         new_url = url
         num_reviews = self.get_number_reviews(business_id)
         counter = 0
         reviews = []
 
+        # use a counter to iterate through the url pages
         while counter <= num_reviews:
-            soup = self.get_soup_from_url(new_url)            
+            soup = get_soup_from_url(new_url)            
             for review in soup.find_all(class_ = 'review--with-sidebar'):
                 review_dict = {}
+                # get user info
                 try:
                     user = review.find(class_ = 'user-display-name').attrs.get('href')
                     review_dict['user'] = user
                 except:
                     pass
+                # get review
                 try:
                     rev = review.find(itemprop='description').text
                     review_dict['review'] = rev
                 except:
                     pass
-
+                # get review date
                 try:
                     date = review.find(itemprop='datePublished').attrs.get('content')
                     review_dict['date'] = date
+                    # review_dict['date'] = datetime.strptime(date,'%Y-%m-%d')
                 except:
                     pass
+                # get review rating
                 try:
                     rating = review.find(itemprop='ratingValue').attrs.get('content')
                     review_dict['rating'] = float(rating)
                 except:
                     pass
+                # only append if review dict is not empty
                 if len(review_dict) != 0:
                     reviews.append(review_dict)
+            # increment counter and update url
             counter += max_limit
             new_url = '{0}?start={1}'.format(url, counter)
         return reviews
@@ -224,14 +229,14 @@ class Yelp(object):
 
         Args:
             business_id (str): A unique business id for each Yelp business
-            outputdir (str): A specified path for where the output should be created
         Returns:
             d (dict): A dictionary for a given business
         """ 
 
         # creates outputdir and check to see if output path exists
-        self.create_dir(self.OUTPUTDIR)
-        output_file = os.path.join(self.OUTPUTDIR,'{0}.p'.format(business_id))
+        outputdir = os.path.join(self.OUTPUTDIR, 'business_dicts')
+        create_dir(outputdir)
+        output_file = os.path.join(outputdir,'{0}.p'.format(business_id))
 
         #Check to see if file exists
         try:
@@ -251,43 +256,46 @@ class Yelp(object):
             pickle.dump(d, open('{0}'.format(output_file), 'wb'))
             print (">>> Output saved to {0}").format(output_file)      
 
-    def load_mongodb_data(self, db, collection, business_ids):
+    def load_mongodb_data(self, db, collection, business_id):
 
         """Loads data into a MongoDB
 
         Args:
             db (str): MongoDB database name
             collection (str): MongoDB collection name
-            term (str): Search term
-            location (str): Search location
-            radius (int): Search radius
+            business_id (str): A unique business id for each Yelp business
         Returns:
             None
         """ 
 
-        self.COLLECTION.drop()
-
-        for business_id in business_ids:
-            business_id = unicodedata.normalize('NFKD', business_id).encode('ascii','ignore')
-            f = os.path.join(self.OUTPUTDIR,'{0}.p'.format(business_id))
-            with open(f, 'r') as infile:
-                dictionary = pickle.load(infile)
-                self.COLLECTION.insert_one(dictionary)
+        # load from pickle and insert collection into database
+        f = os.path.join(self.OUTPUTDIR,'business_dicts','{0}.p'.format(business_id))
+        with open(f, 'r') as infile:
+            dictionary = pickle.load(infile)
+            self.COLLECTION.insert_one(dictionary)
 
     def main(self):
         start_time = time.time()
         print ("Getting your restaurant reviews...")
-        outputdir = os.path.join(self.OUTPUTDIR)
-        business_ids = self.get_business_ids(self.term, self.location, self.radius)
-        for business_id in business_ids:
-            current_business_id = unicodedata.normalize('NFKD', business_id).encode('ascii','ignore')
-            self.create_business_dictionary(current_business_id)
+        create_dir(self.OUTPUTDIR)
+
+        # clear collection
+        print ("Clearing data from MongoDB...")
+        self.COLLECTION.drop()
+
+        # scrape and load into MongoDB
+        for business_id in self.get_business_ids(self.term, self.location, self.radius):
+            print ("Begin {}...".format(business_id))
+            self.create_business_dictionary(business_id)
+            print ("Loading data into MongoDB...")
+            self.load_mongodb_data(self.DB, self.COLLECTION, business_id)
+            print ("Loading data into MongoDB complete!")
+            print ("Processing {} successful!".format(business_id))
+
+        # time to run
         print ("--- %s seconds ---") % (time.time() - start_time)
         print ("Dictionaries created successfully!")
 
-        print ("Loading data into MongoDB...")
-        self.load_mongodb_data(self.DB, self.COLLECTION, business_ids)
-        print ("Loading data into MongoDB complete!")
         
 if __name__ == "__main__":
-    Yelp()
+    Yelp().main()
