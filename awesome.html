@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>Prediction Wizard</title>
     <link rel="stylesheet" href="static/d3.slider.css" />
+    <link rel="stylesheet" href="static/circles.css" />
     <style>
      body {
        font-family: Verdana,Arial,sans-serif;
@@ -51,19 +52,40 @@
 
       <h2 class="feature">Clusters: <span id="clusteres">Select Clusters to Visualize</span></h2>
 
-      <form action="">
-        <input type="checkbox" name="cluster" value="1">Bar and Drinks<br>
-        <input type="checkbox" name="cluster" value="2">Flavorful Dishes<br>
-        <input type="checkbox" name="cluster" value="3">Lunch Sandwiches<br>
-        <input type="checkbox" name="cluster" value="4">Happy Hours<br>
-        <input type="checkbox" name="cluster" value="5">Korean<br>
-        <input type="checkbox" name="cluster" value="6">Burger, Pizza, Fried Food<br>
-        <input type="checkbox" name="cluster" value="7">Spicy Dishes<br>
-        <input type="checkbox" name="cluster" value="8">Bruch and Drinks<br> 
-        <input type="checkbox" name="cluster" value="9">Bar and Nightlife<br>
-        <input type="checkbox" name="cluster" value="10">Indian Food<br> 
-      </form>  
 
+        <table>
+          <tr>
+
+          </tr>
+          <tr>
+
+          </tr>
+          <tr>
+            <input type="checkbox" name="cluster" value="1">Bar and Drinks<br>
+            <input type="checkbox" name="cluster" value="2">Flavorful Dishes<br>
+          </tr>
+          <tr>
+            <input type="checkbox" name="cluster" value="3">Lunch Sandwiches<br>
+            <input type="checkbox" name="cluster" value="4">Happy Hours<br>
+          </tr>
+          <tr>
+            <input type="checkbox" name="cluster" value="5">Korean<br>
+            <input type="checkbox" name="cluster" value="6">Burger, Pizza, Fried Food<br>
+          </tr>
+          <tr>
+            <input type="checkbox" name="cluster" value="7">Spicy Dishes<br>
+            <input type="checkbox" name="cluster" value="8">Bruch and Drinks<br> 
+          </tr>
+          <tr>
+            <input type="checkbox" name="cluster" value="9">Bar and Nightlife<br>
+            <input type="checkbox" name="cluster" value="10">Indian Food<br> 
+          </tr>
+        </table>
+
+
+    </div>
+
+    <div id="chart">
     </div>
 
     <!-- Import the libraries: jQuery, d3, d3.slider -->
@@ -74,22 +96,54 @@
     <script src="static/datastore.js"></script>
 
     <script>
-     <!-- SINGLE BAR CHART -->
-     var current_rating = 3;
-     var current_review = 5;
+
+    function mouseoverC() {
+
+        d3.select(this).select("circle")
+            .attr("r", d3.select(this).select("circle").attr("r") * 2);
+          }
+
+    function mouseoutC() {
+        d3.select(this).select("circle")
+            .attr("r", d3.select(this).select("circle").attr("r") / 2);
+    }
+
+    <!-- SINGLE BAR CHART -->
+    var current_rating = 3;
+    var current_review = 5;
 
     <!-- DRAW D3 Chart -->
     function drawCircles() {
+
       svg.selectAll("circle").remove()
       svg.selectAll("circle")
+
           .data(DataStore.getFilteredData())
-          // debugger;
-        .enter().append("circle")
-          .attr("class", "circle")
-          .attr("r", function(d) { return d.avg_rating * 2; })
-          .attr("cx", function(d,i) { return (i*20) % width; })
-          .attr("cy", function(d,i) { return Math.floor((i*20) / width) * 20;})
-          .style("fill", function(d) { return color(d.cluster); });
+          .enter()
+          .append("a")
+            .attr("xlink:href", function(d) { return 'http://' + d.user; }) 
+            .on("mouseover", mouseoverC)
+            .on("mouseout", mouseoutC)
+          .append("svg:circle")         
+            .attr("class", "circle")
+            .attr("r", function(d) { return 0; })
+            .attr("cx", function(d,i) { return (i*20) % width; })
+            .attr("cy", function(d,i) { return Math.floor((i*20) / width) * 20;})
+            .style("fill", function(d) { return color(d.cluster); })
+            .style("fill-opacity", .2)
+
+          .transition()
+              .duration(500)
+              .ease("linear")
+              .attr("r", function(d) { return d.avg_rating * 2; })
+              .style("fill-opacity", 1);
+              
+      svg.selectAll("circle")
+          .append("svg:title")
+            .text(function(d) { return 'http://' + d.user; });
+      d3.select("#chart").selectAll("svg")
+        .style("height", DataStore.getFilteredData().length * 20 / width * 21 + 50);
+          ;
     };
 
 
@@ -144,43 +198,34 @@
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 1240 - margin.left - margin.right,
     height = 1900 - margin.top - margin.bottom;
-var x = d3.scale.linear()
-    .range([0, width]);
-    // Why linear instead of identity, like we saw before?
-var y = d3.scale.linear()
-    .range([height, 0]);
+
 var color = d3.scale.category10();
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
-var svg = d3.select("body").append("svg")
+
+var svg = d3.select("#chart").append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    // .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-d3.csv("https://raw.githubusercontent.com/jkeung/Restaurant_Analysis/master/data.csv", function(error, data) {
-  var x = 0;
-  var y = 0;
+  d3.csv("https://raw.githubusercontent.com/jkeung/Restaurant_Analysis/master/data.csv", function(error, data) {
+    var x = 0;
+    var y = 0;
 
-  data.forEach(function(d, i) {
-    d.user = d.user;
-    d.last_review_date = d.last_review_date;
-    d.avg_rating = parseFloat(d.avg_rating);
-    d.num_reviews = parseInt(d.num_reviews);
-    d.cluster = parseInt(d.cluster);
-    d.cluster_name = d.cluster_name;
-    DataStore.populateRawData(d);
-  });
-  
-  DataStore.sortOnKeys();
-  DataStore.populateFilteredData();
+    data.forEach(function(d, i) {
+      d.user = d.user;
+      d.last_review_date = d.last_review_date;
+      d.avg_rating = parseFloat(d.avg_rating);
+      d.num_reviews = parseInt(d.num_reviews);
+      d.cluster = parseInt(d.cluster);
+      d.cluster_name = d.cluster_name;
+      DataStore.populateRawData(d);
+    });
 
-  drawCircles();
+    DataStore.sortOnKeys();
+    DataStore.populateFilteredData();
+
+    drawCircles();
 
 
 
