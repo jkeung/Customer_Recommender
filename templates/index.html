@@ -1,142 +1,64 @@
-<html>
+<!doctype html>
+<html lang="en">
 
-  <head>
-    <title> {{ title }} </title>
-    <style>
-      html, body {
-        height: 100%;
-        margin: 20;
-        padding: 20;
-      }
-
-      #map {
-        height: 80%;
-        width: 50%;
-
-      }
-
-      .center {
-	    margin: auto;
-	    width: 60%;
-	    border:3px solid #73AD21;
-	    padding: 10px;
-	  }
-
-
-    </style>
+<head>
+    <meta charset="utf-8" />
+    <title>Customer Recommender</title>
+    <link rel="stylesheet" href="static/d3.slider.css" />
+    <link rel="stylesheet" href="static/circles.css" />
+    <link rel="stylesheet" href="static/prediction.css" />
+    <link href="static/tipsy.css" rel="stylesheet" type="text/css" />
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="static/d3.slider.js"></script>
+    <script src="static/datastore.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+    <script src="static/jquery.tipsy.js"></script>
+    <script src="static/draw_circles.js"></script>
     
-    <h1><center>Best Slice in NYC!</center></h1>
+</head>
 
-    <meta name="viewport" content="initial-scale=1.0">
-    <meta charset="utf-8">
-    <strong><link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}"></strong>
-  </head>
-  <body>
+<body>
 
+    <div id="sliders" class="wrapper">
 
+        <h2 class="feature">Minimum Average Rating: <span id="rating">0</span></h2>
+        <div id="rating_slider"></div>
 
-    <div id="map" style="width:800px; margin:0 auto;"></div>
-    <script type="text/javascript">
+        <h2 class="feature">Minimum Number of Reviews: <span id="review">5</span></h2>
+        <div id="review_slider"></div>
 
-				function initMap() {
+        <h2 class="feature">Clusters: <span id="clusters">Select Clusters</span></h2>
 
-				    var map = new google.maps.Map(document.getElementById('map'), {
-				      zoom: 14,
-				      center: new google.maps.LatLng(40.7127, -74.0059),
-				      mapTypeId: google.maps.MapTypeId.ROADMAP
-				    });
-					var infowindow = new google.maps.InfoWindow();
-				    
-				    {% for restaurant in restaurants %}
+        <form action="">
 
-			        var markerLatlng = new google.maps.LatLng({{restaurant.coordinate.latitude}}, {{restaurant.coordinate.longitude}});
-				    var title = '{{restaurant.name}}'
-				    var iwContent = '<div id="content">'+
-      								'<div id="siteNotice">'+
-      								'</div>'+
-      								'<h1 id="firstHeading" class="firstHeading">' + '{{restaurant.name}}' + '</h1>'+
-      								'<div id="bodyContent">'+
-      								'<p>' +
-      								'Sentiment Score: ' + '{{restaurant.sentiment_scores}}' + '<br>' + 
-      								'Trending Words: ' + '{{restaurant.words}}' + '<br>' + 
-      								'<img src="' + '{{restaurant.image}}' + '"><br>' + 
-      								'<a href="http://www.yelp.com/biz/' + '{{restaurant.id}}' + '">' + 'Visit Yelp Website' + '</a><br>' 
+                    <input id = "cluster1" type="checkbox" name="cluster" value="1" checked = True><span style="color:#9467bd; font-size:1em">&#9632;</span>Happy Hours
+                    <br>
+                    <input id = "cluster2" type="checkbox" name="cluster" value="2" checked = True><span style="color:#2ca02c; font-size:1em">&#9632;</span>Burgers and Shakes
+                    <br>
+                    <input id = "cluster3" type="checkbox" name="cluster" value="3" checked = True><span style="color:#ff7f0e; font-size:1em">&#9632;</span>Lunch Sandwiches, Salads, and Soups
+                    <br>
+                    <input id = "cluster4" type="checkbox" name="cluster" value="4" checked = True><span style="color:; font-size:1em">&#9632;</span>Indian Food
+                    <br>
+                    <input id = "cluster5" type="checkbox" name="cluster" value="5" checked = True><span style="color:#17becf; font-size:1em">&#9632;</span>Sit Down Lunch
+                    <br>
+                    <input id = "cluster6" type="checkbox" name="cluster" value="6" checked = True><span style="color:#7f7f7f; font-size:1em">&#9632;</span>Korean Food
+                    <br>
+                    <input id = "cluster7" type="checkbox" name="cluster" value="7" checked = True><span style="color:#8c564b; font-size:1em">&#9632;</span>Wines and Brunch
+                    <br>
+                    <input id = "cluster8" type="checkbox" name="cluster" value="8" checked = True><span style="color:#bcbd22; font-size:1em">&#9632;</span>Spicy Rice Dishes
+                    <br>
+                    <input id = "cluster9" type="checkbox" name="cluster" value="9" checked = True><span style="color:#e377c2; font-size:1em">&#9632;</span>Desserts
+                    <br>
+                    <input id = "cluster10" type="checkbox" name="cluster" value="10" checked = True><span style="color:#d62728; font-size:1em">&#9632;</span>Pizza Lovers
+                    <br>
+        </form>
+    </div>
 
-      
-
-				    createMarker(markerLatlng ,title,iwContent);
-
-				    function createMarker(latlon,title,iwContent) {
-				      var marker = new google.maps.Marker({
-				          position: latlon,
-				          title: title,
-				          animation: google.maps.Animation.DROP,
-				          map: map,
-				          icon: 'http://icons.iconarchive.com/icons/sonya/swarm/48/Pizza-icon.png'
-				    	});
-
-				      marker.addListener('click', toggleBounce);
-
-				      function toggleBounce() {
-					  if (marker.getAnimation() !== null) {
-					    marker.setAnimation(null);
-					  } else {
-					    marker.setAnimation(google.maps.Animation.BOUNCE);
-					  }
-					}
+    <div id="chart">
+    </div>
 
 
-					google.maps.event.addListener(marker, 'click', function () {
-					    infowindow.setContent(iwContent);
-					    infowindow.open(map, marker);
-					    });
+</body>
 
-					    }
-
-					
-
-					{% endfor %}
-
-
-					};
-
-
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1teuAWuZPQJRjQUFEUDxccDUniz46o28&callback=initMap"
-        async defer></script>
-
-
-
-  	<table align = "center">
-  	  <tr>
-  	  	<th> Restaurant </th>
-  	  	<th> Sentiment Score </th>
-  	  	<th> Rating </th>
-  	  	<th> Trending Words </th>
-  	  	<th> Neighborhood </th>
-
-  	  </tr>
-  		{% for restaurant in restaurants %}
-  	  <tr>
-
-  	  	<td> 
-  	  		<script>
-  	  		burl = "http://www.yelp.com/biz/"
-  	  		document.write('<a href="' + burl + '{{restaurant.id}} "> {{restaurant.name}} </a>'); 
-  	  		</script>
-  	  	</td>
-      	<td> {{ restaurant.sentiment_scores }} </td>
-      	<td> {{ restaurant.rating }} </td>
-      	<td> {% for word in restaurant.words %} "{{ word }}" {% endfor %} </td>
-      	<td> {% for word in restaurant.neighborhood %} {{ word }} {% endfor %} </td>
-
-      </tr>
-      	{% endfor %}
-
-     </table>
-
-
-
-
-  </body>
 </html>
