@@ -1,10 +1,11 @@
-(function () {
+$(document).ready( function () {
 	var _rawData = [];
 	var _sortedData = [];
 	var _filteredData = [];
 
 	var avgRating = parseFloat($("#rating").text());
 	var numReviews = parseInt($("#review").text());
+	var clusterArray = [];
 
 	DataStore = window.DataStore = {
 		populateRawData: function (dataElement) {
@@ -39,8 +40,8 @@
 
 			_rawData.forEach(function (data) {
 				if (data.avg_rating >= avgRating
-					&& data.num_reviews >= numReviews) {
-
+					&& data.num_reviews >= numReviews 
+					&& clusterArray.indexOf(data.cluster) != -1){
 					_filteredData.push(data);
 				}
 			});
@@ -65,9 +66,13 @@
 			avgRating = rating;
 		},
 
+		setClusterArray: function (cluster) {
+			clusterArray = cluster;
+		},
+
 		setNumReviews: function (reviews) {
 			numReviews = reviews;
 		}
 
 	};
-}());
+});

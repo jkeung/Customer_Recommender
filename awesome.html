@@ -3,264 +3,62 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Prediction Wizard</title>
+    <title>Customer Recommender</title>
     <link rel="stylesheet" href="static/d3.slider.css" />
     <link rel="stylesheet" href="static/circles.css" />
-    <style>
-        body {
-            font-family: Verdana, Arial, sans-serif;
-        }
-        
-        h2 {
-            font-size: 1.2em;
-            margin: 60px 0 5px 0;
-            color: gray
-        }
-        
-        .space {
-            margin-bottom: 20 px;
-        }
-        
-        .wrapper {
-            width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            margin-bottom: 0px;
-        }
-        
-        #bar_chart {
-            margin-bottom: 0 px;
-        }
-        
-        .bar {
-            fill: #FF75A3;
-        }
-        
-        span {
-            color: steelblue;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div id="sliders" class="wrapper">
-
-        <h2 class="feature">Average Rating: <span id="rating">3</span></h2>
-        <div id="rating_slider"></div>
-
-        <h2 class="feature">Number Reviews: <span id="review">5</span></h2>
-        <div id="review_slider"></div>
-
-    </div>
-
-    <div id="cluster_selection" class="wrapper">
-
-        <h2 class="feature">Clusters: <span id="clusters">Select Clusters to Visualize</span></h2>
-
-        <form action="">
-
-                    <input type="checkbox" name="cluster" value="1">Happy Hours
-                    <br>
-                    <input type="checkbox" name="cluster" value="2">Burgers and Shakes
-                    <br>
-                    <input type="checkbox" name="cluster" value="3">Lunch Sandwiches, Salads, and Soups
-                    <br>
-                    <input type="checkbox" name="cluster" value="4">Indian Food
-                    <br>
-                    <input type="checkbox" name="cluster" value="5">Sit Down Lunch
-                    <br>
-                    <input type="checkbox" name="cluster" value="6">Korean Food
-                    <br>
-                    <input type="checkbox" name="cluster" value="7">Wines and Brunch
-                    <br>
-                    <input type="checkbox" name="cluster" value="8">Spicy Rice Dishes
-                    <br>
-                    <input type="checkbox" name="cluster" value="9">Desserts
-                    <br>
-                    <input type="checkbox" name="cluster" value="10">Pizza Lovers
-                    <br>
-        </form>
-
-    </div>
-
-    <div id="chart">
-    </div>
-
-    <!-- Import the libraries: jQuery, d3, d3.slider -->
-    <!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
+    <link rel="stylesheet" href="static/prediction.css" />
+    <link href="static/tipsy.css" rel="stylesheet" type="text/css" />
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="static/d3.slider.js"></script>
     <script src="static/datastore.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script src="static/jquery.tipsy.js"></script>
-    <link href="static/tipsy.css" rel="stylesheet" type="text/css" />
+    <script src="static/draw_circles.js"></script>
+    
+</head>
 
-    <script>
+<body>
 
-        <!-- SINGLE BAR CHART -->
-        var current_rating = 3;
-        var current_review = 5;
+    <div id="sliders" class="wrapper">
 
-        <!-- DRAW D3 Chart -->
-        function drawCircles() {
+        <h2 class="feature">Average Rating: <span id="rating">0</span></h2>
+        <div id="rating_slider"></div>
 
-            svg.selectAll("circle").remove();
+        <h2 class="feature">Number Reviews: <span id="review">5</span></h2>
+        <div id="review_slider"></div>
 
-            svg.selectAll("circle")
+        <h2 class="feature">Clusters: <span id="clusters">Select Clusters to Visualize</span></h2>
 
-            .data(DataStore.getFilteredData())
-                .enter()
-                .append("a")
-                .attr("xlink:href", function(d) {
-                    return 'http://' + d.user;
-                })
-                .append("svg:circle")
-                .attr("class", "circle")
-                .attr("r", function(d) {
-                    return 0;
-                })
-                .attr("cx", function(d, i) {
-                    return Math.random() * width;
-                })
-                .attr("cy", function(d, i) {
-                    return Math.random() *((i * 20) / width) * 20;
-                })
-                .style("fill", function(d) {
-                    return color(d.cluster);
-                })
-                .style("fill-opacity", .2)
+        <form action="">
 
-            .transition()
-                .duration(2000)
-                .ease("linear")
-                .attr("r", function(d) {
-                    return d.avg_rating * 2;
-                })
-                .attr("cx", function(d, i) {
-                    return (i * 20) % width;
-                })
-                .attr("cy", function(d, i) {
-                    return Math.floor((i * 20) / width) * 20;
-                })
-                .style("fill-opacity", 1);
+                    <input id = "cluster1" type="checkbox" name="cluster" value="1" ><span style="color:#1F77B4; font-size:1em">&#9632;</span>Happy Hours
+                    <br>
+                    <input id = "cluster2" type="checkbox" name="cluster" value="2" ><span style="color:#ff7f0e; font-size:1em">&#9632;</span>Burgers and Shakes
+                    <br>
+                    <input id = "cluster3" type="checkbox" name="cluster" value="3" ><span style="color:#2ca02c; font-size:1em">&#9632;</span>Lunch Sandwiches, Salads, and Soups
+                    <br>
+                    <input id = "cluster4" type="checkbox" name="cluster" value="4" ><span style="color:#d62728; font-size:1em">&#9632;</span>Indian Food
+                    <br>
+                    <input id = "cluster5" type="checkbox" name="cluster" value="5" ><span style="color:#9467bd; font-size:1em">&#9632;</span>Sit Down Lunch
+                    <br>
+                    <input id = "cluster6" type="checkbox" name="cluster" value="6" ><span style="color:#8c564b; font-size:1em">&#9632;</span>Korean Food
+                    <br>
+                    <input id = "cluster7" type="checkbox" name="cluster" value="7" ><span style="color:#e377c2; font-size:1em">&#9632;</span>Wines and Brunch
+                    <br>
+                    <input id = "cluster8" type="checkbox" name="cluster" value="8" ><span style="color:#7f7f7f; font-size:1em">&#9632;</span>Spicy Rice Dishes
+                    <br>
+                    <input id = "cluster9" type="checkbox" name="cluster" value="9" ><span style="color:#bcbd22; font-size:1em">&#9632;</span>Desserts
+                    <br>
+                    <input id = "cluster10" type="checkbox" name="cluster" value="10" ><span style="color:#17becf; font-size:1em">&#9632;</span>Pizza Lovers
+                    <br>
+        </form>
+    </div>
 
-            svg.selectAll("circle")
-                .append("svg:title")
-                .text(function(d) {
-                    return 'http://' + d.user;
-                });
-            d3.select("#chart").selectAll("svg")
-                .style("height", DataStore.getFilteredData().length * 20 / width * 21 + 50)
-
-            $('svg circle').tipsy({
-                gravity: 'w',
-                html: true,
-                title: function() {
-                    var d = this.__data__,
-                        c = color(d.i);
-                    return '<table><tr><td>Average Rating: ' + d.avg_rating + '</td></tr>' +
-                        '<tr><td>Number Local Reviews: ' + d.num_reviews + '</td></tr>' +
-                        '<tr><td>Cluster: ' + d.cluster_name + '</td></tr></table>'
+    <div id="chart">
+    </div>
 
 
-                    ;
-                }
-            });
-
-
-        };
-
-
-        <!-- SET UP EVENT LISTENERS -->
-        $("#rating").on("DOMSubtreeModified", function(e) {
-            var rating = parseFloat(e.currentTarget.textContent);
-            DataStore.setAvgRating(rating);
-            DataStore.populateFilteredData();
-            drawCircles();
-        });
-
-        $("#review").on("DOMSubtreeModified", function(e) {
-            var review = parseFloat(e.currentTarget.textContent);
-            DataStore.setNumReviews(review);
-            DataStore.populateFilteredData();
-            drawCircles();
-        });
-
-
-        <!-- SLIDERS -->
-        d3.select('#rating_slider')
-            .call(
-                d3.slider()
-                .value(current_rating)
-                .min(0)
-                .max(5)
-                .step(.02)
-                .axis(true)
-                .on("slide", function(evt, value) {
-                    d3.select('#rating').text(Math.round(value * 100) / 100);
-                    current_rating = value;
-                })
-            );
-
-        d3.select('#review_slider')
-            .call(
-                d3.slider()
-                .value(current_review)
-                .min(5)
-                .max(110)
-                .step(1)
-                .axis(true)
-                .on("slide", function(evt, value) {
-                    d3.select('#review').text(value);
-                    current_review = value;
-                })
-            );
-
-
-        var margin = {
-                top: 20,
-                right: 20,
-                bottom: 30,
-                left: 40
-            },
-            width = 1240 - margin.left - margin.right;
-            // height = 1900 - margin.top - margin.bottom;
-
-        var color = d3.scale.category10();
-
-        var svg = d3.select("#chart").append("svg:svg")
-            .attr("width", width + margin.left + margin.right)
-            // .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-        d3.csv("https://raw.githubusercontent.com/jkeung/Restaurant_Analysis/master/data.csv", function(error, data) {
-            var x = 0;
-            var y = 0;
-
-
-
-            data.forEach(function(d, i) {
-                d.user = d.user;
-                d.last_review_date = d.last_review_date;
-                d.avg_rating = parseFloat(d.avg_rating);
-                d.num_reviews = parseInt(d.num_reviews);
-                d.cluster = parseInt(d.cluster);
-                d.cluster_name = d.cluster_name;
-                DataStore.populateRawData(d);
-            });
-
-            DataStore.sortOnKeys();
-            DataStore.populateFilteredData();
-
-            drawCircles();
-
-
-        });
-    </script>
 </body>
 
 </html>

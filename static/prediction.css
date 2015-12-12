@@ -1,0 +1,37 @@
+        body {
+            font-family: Verdana, Arial, sans-serif;
+        }
+        
+        h2 {
+            font-size: 1.2em;
+            margin: 60px 0 5px 0;
+            color: gray
+        }
+        
+        .space {
+            margin-bottom: 20 px;
+        }
+        
+        .wrapper {
+            width: 24%;
+            float: left;
+            margin-left: 1%;
+        }
+        
+        #bar_chart {
+            margin-bottom: 0 px;
+        }
+        
+        .bar {
+            fill: #FF75A3;
+        }
+        
+        span {
+            color: steelblue;
+        }
+
+        #chart {
+            width: 74%;
+            float: right;
+            margin-right: 1%;
+        }
