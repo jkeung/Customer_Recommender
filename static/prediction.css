@@ -5,7 +5,7 @@
         h2 {
             font-size: 1.2em;
             margin: 60px 0 5px 0;
-            color: gray
+            color: #282b2b;
         }
         
         .space {
@@ -13,7 +13,7 @@
         }
         
         .wrapper {
-            width: 24%;
+            width: 29%;
             float: left;
             margin-left: 1%;
         }
@@ -31,7 +31,7 @@
         }
 
         #chart {
-            width: 74%;
+            width: 69%;
             float: right;
             margin-right: 1%;
         }

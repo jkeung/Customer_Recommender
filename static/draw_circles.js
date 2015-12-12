@@ -123,7 +123,7 @@ $(document).ready(function() {
                 .value(current_rating)
                 .min(0)
                 .max(5)
-                .step(.02)
+                .step(.05)
                 .axis(true)
                 .on("slide", function(evt, value) {
                     d3.select('#rating').text(Math.round(value * 100) / 100);
