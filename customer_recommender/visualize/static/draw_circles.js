@@ -28,7 +28,6 @@ $(document).ready(function() {
                     return Math.random() *((i * radius) / width) * radius;
                 })
                 .style("fill", function(d) {
-                    console.log(color(d.cluster));
                     return color(d.cluster);
                 })
                 .style("fill-opacity", .2)
@@ -136,7 +135,7 @@ $(document).ready(function() {
                 d3.slider()
                 .value(current_review)
                 .min(5)
-                .max(110)
+                .max(100)
                 .step(1)
                 .axis(true)
                 .on("slide", function(evt, value) {
