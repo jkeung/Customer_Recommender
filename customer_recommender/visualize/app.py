@@ -1,11 +1,13 @@
 import flask
-import numpy as np
-import pandas as pd
+import os
 
 #---------- URLS AND WEB PAGES -------------#
 
+with open(os.path.join("output","data.csv"), "r") as f:
+    csvfile = f.read()
+
 # Initialize the app
-app = flask.Flask(__name__, template_folder='../templates', static_folder='../static')
+app = flask.Flask(__name__, template_folder='templates', static_folder='static')
 
 # Homepage
 @app.route("/")
@@ -14,7 +16,8 @@ def viz_page():
     Homepage: serve our visualization page, awesome.html
     """
 
-    return flask.render_template('index.html')
+    return flask.render_template('index.html',
+                                csvfile = csvfile)
                                 
 #--------- RUN WEB APP SERVER ------------#
 

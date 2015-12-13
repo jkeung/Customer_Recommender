@@ -164,8 +164,7 @@ $(document).ready(function() {
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
-        d3.csv("https://raw.githubusercontent.com/jkeung/Restaurant_Analysis/master/data.csv", function(error, data) {
+        d3.csv("../static/data.csv", function(error, data) {
             var x = 0;
             var y = 0;
 
