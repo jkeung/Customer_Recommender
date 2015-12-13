@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python -m food_finder.ingest.yelp
+python -m customer_recommender.ingest.yelp
