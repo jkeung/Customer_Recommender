@@ -12,10 +12,10 @@
 output: "output"
 
 ## Specify your Yelp API keys
-consumer_key: "RI2mrfWeg0RDcH2Pr8tNow"
-consumer_secret: "vDXVcWQcbDggtbvIAj-wVOSyvh4"
-access_token: "qrY6uy8vIqLUR6G693RxaXnYdsRYCQte"
-access_token_secret: "rLVAuc6hvoh97Hcd0PMSHowzpQk"
+consumer_key: <super secret key>
+consumer_secret: <super secret key>
+access_token: <super secret key>
+access_token_secret: <super secret key>
 
 ## Specify database settings
 database: "yelpdb"
