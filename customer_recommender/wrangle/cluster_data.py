@@ -262,7 +262,7 @@ def main():
     cluster_words_dict = get_cluster_words_dict(reviews, vocab_frame, km, num_clusters, terms)
     cluster_words_dict = manually_define_clusters()
     final_df = clean_df(df, cluster_words_dict, km, users)
-    final_df.to_csv(os.path.join('output','data.csv'), index = False)
+    final_df.to_csv(os.path.join('customer_recommender','visualize','static','data.csv'), index = False)
 
 if __name__ == "__main__":
     main()
