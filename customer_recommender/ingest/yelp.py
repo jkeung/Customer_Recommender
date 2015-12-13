@@ -12,7 +12,7 @@ import unicodedata
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from ..helper import create_dir, get_soup_from_url
-from food_finder.config import settings
+from customer_recommender.config import settings
 
 
 class Yelp(object):
@@ -66,7 +66,7 @@ class Yelp(object):
                 'oauth_consumer_key': self.CONSUMER_KEY
             }
         )
-        token = oauth2.Token(self.TOKEN,self. TOKEN_SECRET)
+        token = oauth2.Token(self.TOKEN,self.TOKEN_SECRET)
         oauth_request.sign_request(oauth2.SignatureMethod_HMAC_SHA1(), consumer, token)
         signed_url = oauth_request.to_url()
 
@@ -97,7 +97,7 @@ class Yelp(object):
         resume = True
 
         # iterate and collect business ids from Yelp
-        while resume:
+        while resume and offset < 1000:
             url_params = {
                 'term': term.replace(' ', '+'),
                 'location': location.replace(' ', '+'),
@@ -222,6 +222,7 @@ class Yelp(object):
             counter += max_limit
             new_url = '{0}?start={1}'.format(url, counter)
         return reviews
+
 
     def create_business_dictionary(self, business_id):
 
