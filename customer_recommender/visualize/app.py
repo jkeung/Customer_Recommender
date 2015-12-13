@@ -1,10 +1,6 @@
 import flask
-import os
 
 #---------- URLS AND WEB PAGES -------------#
-
-with open(os.path.join("output","data.csv"), "r") as f:
-    csvfile = f.read()
 
 # Initialize the app
 app = flask.Flask(__name__, template_folder='templates', static_folder='static')
@@ -16,8 +12,7 @@ def viz_page():
     Homepage: serve our visualization page, awesome.html
     """
 
-    return flask.render_template('index.html',
-                                csvfile = csvfile)
+    return flask.render_template('index.html')
                                 
 #--------- RUN WEB APP SERVER ------------#
 
