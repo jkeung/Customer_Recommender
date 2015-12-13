@@ -3,3 +3,9 @@
 
 # compiled files
 *.pyc
+
+# ipython notebooks
+*.ipynb
+
+# pycharm ide files
+/.idea
