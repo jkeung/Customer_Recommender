@@ -2,14 +2,11 @@
 import json
 import urllib
 import urllib2
-import cnfg
 import os
 import time
 import pickle
-import requests
 import oauth2
 import unicodedata
-from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from ..helper import create_dir, get_soup_from_url
 from customer_recommender.config import settings
@@ -17,7 +14,7 @@ from customer_recommender.config import settings
 
 class Yelp(object):
 
-    OUTPUTDIR = settings.get('output')
+    OUTPUTDIR = 'output'
 
     API_HOST = 'api.yelp.com'
     SEARCH_LIMIT = 20
@@ -35,9 +32,11 @@ class Yelp(object):
     exec 'COLLECTION = DB.{0}'.format(settings.get('collection'))
 
     def __init__(self):
-        self.term = raw_input('What food would you like to search for? ')
+        # self.term = raw_input('What food would you like to search for? ')
+        self.term = 'restaurants'
         self.location = raw_input('What is your location? ').replace(" ","")
-        self.radius = raw_input('What is your search radius (in meters)? ')
+        # self.radius = raw_input('What is your search radius (in meters)? ')
+        self.readus = 1000
 
     def request(self, host, path, url_params=None):
 
