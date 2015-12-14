@@ -11,10 +11,10 @@ def create_dir(directory):
     Returns:
         None
     """
-
     #Check to see if directory exists
     if not os.path.exists(directory):
         os.makedirs(directory)
+
 
 def get_soup_from_url(url):
 
@@ -29,3 +29,4 @@ def get_soup_from_url(url):
 
     soup = BeautifulSoup(requests.get(url).text, 'lxml')
     return soup
+

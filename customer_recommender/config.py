@@ -87,9 +87,9 @@ class FoodFinderSettings(Settings):
 
     # Search path for configuration files
     CONF_PATHS = [
-        os.path.expandvars('$HOME/.yelp/.config.yaml'),  # User specific configuration
+        os.path.expandvars('$HOME/.yelp/config.yaml'),  # User specific configuration
         os.path.abspath('conf/config.yaml'),             # Local directory configuration
-        os.path.abspath('config.yaml'),                  # Local directory configuration
+        os.path.abspath('config.yaml')                  # Local directory configuration
     ]
 
     def __init__(self):
@@ -108,6 +108,5 @@ class FoodFinderSettings(Settings):
 ##########################################################################
 
 settings = FoodFinderSettings.load()
-
 if __name__ == '__main__':
     print settings
