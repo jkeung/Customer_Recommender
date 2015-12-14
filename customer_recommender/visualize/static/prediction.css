@@ -13,7 +13,7 @@
         }
         
         .wrapper {
-            width: 29%;
+            width: 31%;
             float: left;
             margin-left: 1%;
         }
@@ -31,7 +31,7 @@
         }
 
         #chart {
-            width: 67%;
+            width: 65%;
             float: right;
             margin-right: 1%;
         }

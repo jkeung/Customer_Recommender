@@ -28,6 +28,7 @@ $(document).ready(function() {
                     return Math.random() *((i * radius) / width) * radius;
                 })
                 .style("fill", function(d) {
+                    console.log(color(d.cluster));
                     return color(d.cluster);
                 })
                 .style("fill-opacity", .2)
