@@ -16,6 +16,6 @@ def viz_page():
                                 
 #--------- RUN WEB APP SERVER ------------#
 
-# Start the app server on port 80
+# Start the app server on port 5000
 # (The default website port)
 app.run(host='0.0.0.0', port=5000)
