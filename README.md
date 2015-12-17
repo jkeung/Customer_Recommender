@@ -1,26 +1,34 @@
 # Customer Recommender
-An app that will help you find and visualize the top Yelpers in your community!
+An app that will help you find the best customers for your restaurant in your community!
 
-Make a virtual environment
+Create a virtual environment:
+
+```virtualenv venv```
 
 
-apt-get install python-dev libxml2 libxml2-dev libxslt-dev
+<!--apt-get install python-dev libxml2 libxml2-dev libxslt-dev
+-->
+Install Requirements:
 
-Install Requirements
-```pip install requirements.txt```
+```pip install -r requirements.txt```
 
 ```python setup.py build```
 
 ```python setup.py install```
 
+Set up MongoDB:
 
-Set up MongoDB
+Follow instructions found here to install and setup MongoDB:
+	
+```https://docs.mongodb.org/manual/installation/```
+
+Install NLTK dependencies:
 
 
-Install NLTK dependencies
 
 
 Set your Yelp API Credentials
+
 
 
 Run Scraping and Analyzing Script
