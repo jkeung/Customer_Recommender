@@ -240,9 +240,11 @@ def main():
     df = get_raw_dataframe(COLLECTION)
     user_df = create_user_df(df)
 
+    # get list of users and reviews
     users = user_df['user'].tolist()
     reviews = user_df['reviews'].tolist()
 
+    # tfidf
     vocab_frame = build_vocab_frame(reviews, stop)
     tfidf_vectorizer = TfidfVectorizer(max_df=0.8, 
                                        max_features=200000,
@@ -252,17 +254,24 @@ def main():
                                        use_idf=True, 
                                        tokenizer=tokenize_and_stem, 
                                        ngram_range=(1,3))
-
-    tfidf_matrix = tfidf_vectorizer.fit_transform(reviews) #fit the vectorizer to reviews
+    tfidf_matrix = tfidf_vectorizer.fit_transform(reviews) 
     terms = tfidf_vectorizer.get_feature_names()
 
     num_clusters = 10
+
+    # kmeans
     km = KMeans(n_clusters=num_clusters, random_state=2)
     km.fit(tfidf_matrix)
+
+    # get cluster words
     cluster_words_dict = get_cluster_words_dict(reviews, vocab_frame, km, num_clusters, terms)
     cluster_words_dict = manually_define_clusters()
     final_df = clean_df(df, cluster_words_dict, km, users)
-    final_df.to_csv(os.path.join('customer_recommender','visualize','static','data.csv'), index = False)
+
+    # save data to csv
+    outfile = os.path.join('customer_recommender','visualize','static','data.csv')
+    final_df.to_csv(outfile, index = False)
+    print "Output saved to {}".format(outfile)
 
 if __name__ == "__main__":
     main()
