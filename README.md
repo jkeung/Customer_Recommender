@@ -41,11 +41,22 @@ You are encouraged to use a python virtual environment using virtualenv and pip.
 * Werkzeug - Werkzeug is a WSGI utility library for Python
 * wheel - A built-package format for Python
 
+If there are issues install lxml on Mac OSX, libxml2 and libxslt may be required. (http://stackoverflow.com/questions/19548011/cannot-install-lxml-on-mac-os-x-10-9)
+
+```
+brew install libxml2
+brew install libxslt
+brew link libxml2 --force
+brew link libxslt --force
+```
+
 ## Set up MongoDB (skip this step if MongoDB is already installed)
 
 Follow instructions found here to install and setup MongoDB:
 	
-```https://docs.mongodb.org/manual/installation/```
+```
+https://docs.mongodb.org/manual/installation/
+```
 
 Ensure that the MongoDB daemon is running by running: ```$ mongod```
 
