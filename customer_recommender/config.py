@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # food_finder.config
 # Loads configuration data from a YAML file.
 #

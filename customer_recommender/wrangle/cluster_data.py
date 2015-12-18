@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from pymongo import MongoClient
 
 import pandas as pd
