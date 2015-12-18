@@ -36,7 +36,7 @@ class Yelp(object):
         self.term = 'restaurants'
         self.location = raw_input('What is your location? ').replace(" ","")
         # self.radius = raw_input('What is your search radius (in meters)? ')
-        self.readus = 1000
+        self.radius = 1000
 
     def request(self, host, path, url_params=None):
 
