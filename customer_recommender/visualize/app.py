@@ -1,7 +1,5 @@
 import flask
 
-#---------- URLS AND WEB PAGES -------------#
-
 # Initialize the app
 app = flask.Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -13,8 +11,6 @@ def viz_page():
     """
 
     return flask.render_template('index.html')
-                                
-#--------- RUN WEB APP SERVER ------------#
 
 # Start the app server on port 5000
 # (The default website port)

@@ -27,8 +27,8 @@ def get_top_users(df, min_reviews=5):
         top_users (list): A list of the top local Yelp reviewers
 
     """
-    top_users_df = df.groupby('user').agg({'review': 'count'}).sort_values(by='review', ascending = False)
-    top_users = top_users_df[top_users_df['review']>min_reviews].index.tolist()
+    top_users_df = df.groupby('user').agg({'review': 'count'}).sort_values(by='review', ascending=False)
+    top_users = top_users_df[top_users_df['review'] > min_reviews].index.tolist()
     return top_users
 
 
@@ -92,7 +92,7 @@ def get_raw_dataframe(collection):
 
 
 def create_user_df(df):
-    """Function to create a DataFrame grouped by user. The review column contains all the reviews for a specific 
+    """Function to create a DataFrame grouped by user. The review column contains all the reviews for a specific
        user as a string.
 
     Args:
@@ -106,7 +106,7 @@ def create_user_df(df):
     for user in get_top_users(df):
         d = {}
         reviews = ''
-        df2 = df[df['user']==user]
+        df2 = df[df['user'] == user]
         for review in df2['review'].tolist():
             reviews += review
         d['user'] = user
@@ -153,7 +153,7 @@ def build_vocab_frame(reviews, stop):
 
 
 def get_cluster_words_dict(reviews, vocab_frame, km, num_clusters, terms):
-    """Function to obtain the top words for each cluster. 
+    """Function to obtain the top words for each cluster.
 
     Args:
         reviews (list): List of reviews
@@ -168,7 +168,7 @@ def get_cluster_words_dict(reviews, vocab_frame, km, num_clusters, terms):
 
     clusters = km.labels_.tolist()
     # sort cluster centers by proximity to centroid
-    order_centroids = km.cluster_centers_.argsort()[:, ::-1] 
+    order_centroids = km.cluster_centers_.argsort()[:, ::-1]
 
     cluster_words_dict = {}
     for i in range(num_clusters):
@@ -191,22 +191,22 @@ def manually_define_clusters():
 
     # Do manual check to make sense of the clusters
     cluster_words_dict = {
-        0:"Happy Hours",
-        1:"Burgers and Shakes",
-        2:"Lunch Sandwiches, Salads, and Soups",
-        3:"Indian Food",
-        4:"Sit Down Lunch",
-        5:"Korean Food",
-        6:"Wines and Brunch",
-        7:"Spicy Rice Dishes",
-        8:"Desserts",
-        9:"Pizza Lovers"
+        0: "Happy Hours",
+        1: "Burgers and Shakes",
+        2: "Lunch Sandwiches, Salads, and Soups",
+        3: "Indian Food",
+        4: "Sit Down Lunch",
+        5: "Korean Food",
+        6: "Wines and Brunch",
+        7: "Spicy Rice Dishes",
+        8: "Desserts",
+        9: "Pizza Lovers"
     }
     return cluster_words_dict
 
 
 def clean_df(df, cluster_words_dict, km, users):
-    """Function to create final cleaned dataframe for analysis. 
+    """Function to create final cleaned dataframe for analysis.
 
     Args:
         df (pandas.DataFrame): Raw dataframe data
@@ -218,25 +218,26 @@ def clean_df(df, cluster_words_dict, km, users):
 
     """
 
-    filtered_df = df.groupby('user').agg({'rating':'mean','review':'count','date':'max'}).sort_values(by='review', ascending = False)
-    filtered_df = filtered_df[filtered_df['review']>5]
-    final_df = filtered_df.join(pd.DataFrame(km.labels_.tolist(), index = [users] , columns = ['cluster']), how = 'inner')
-    final_df = final_df.sort_values(by=['cluster','rating','review'], ascending = [True,False,False])
-    final_df.reset_index(inplace = True)
-    final_df.rename(columns = {'review':'num_reviews'}, inplace = True)
-    final_df.rename(columns = {'rating':'avg_rating'}, inplace = True)
-    final_df.rename(columns = {'date':'last_review_date'}, inplace = True)
-    final_df.rename(columns = {'index':'user'}, inplace = True)
+    filtered_df = df.groupby('user').agg({'rating': 'mean', 'review': 'count', 'date': 'max'}).sort_values(by='review', ascending=False)
+    filtered_df = filtered_df[filtered_df['review'] > 5]
+    final_df = filtered_df.join(pd.DataFrame(km.labels_.tolist(), index=[users], columns=['cluster']), how='inner')
+    final_df = final_df.sort_values(by=['cluster', 'rating', 'review'], ascending=[True, False, False])
+    final_df.reset_index(inplace=True)
+    final_df.rename(columns={'review': 'num_reviews'}, inplace=True)
+    final_df.rename(columns={'rating': 'avg_rating'}, inplace=True)
+    final_df.rename(columns={'date': 'last_review_date'}, inplace=True)
+    final_df.rename(columns={'index': 'user'}, inplace=True)
     final_df['cluster_name'] = final_df['cluster'].apply(lambda x: cluster_words_dict[x])
     final_df['cluster'] = final_df['cluster'].apply(lambda x: x + 1)
-    final_df['avg_rating'] = final_df['avg_rating'].apply(lambda x: round(float(x),2))
-    final_df['user'] = final_df['user'].apply(lambda x:'www.yelp.com' + x)
+    final_df['avg_rating'] = final_df['avg_rating'].apply(lambda x: round(float(x), 2))
+    final_df['user'] = final_df['user'].apply(lambda x: 'www.yelp.com' + x)
     return final_df
 
 
 def main():
 
     random.seed(2)
+    print "Starting task to cluster data..."
     stop = get_stop_words(stopwords.words('english'))
     df = get_raw_dataframe(COLLECTION)
     user_df = create_user_df(df)
@@ -247,31 +248,33 @@ def main():
 
     # tfidf
     vocab_frame = build_vocab_frame(reviews, stop)
-    tfidf_vectorizer = TfidfVectorizer(max_df=0.8, 
+    tfidf_vectorizer = TfidfVectorizer(max_df=0.8,
                                        max_features=200000,
-                                       min_df=0.2, 
+                                       min_df=0.2,
                                        lowercase=True,
                                        stop_words=stop,
-                                       use_idf=True, 
-                                       tokenizer=tokenize_and_stem, 
-                                       ngram_range=(1,3))
-    tfidf_matrix = tfidf_vectorizer.fit_transform(reviews) 
+                                       use_idf=True,
+                                       tokenizer=tokenize_and_stem,
+                                       ngram_range=(1, 3))
+    tfidf_matrix = tfidf_vectorizer.fit_transform(reviews)
     terms = tfidf_vectorizer.get_feature_names()
 
     num_clusters = 10
 
+    print "Performing k-means..."
     # kmeans
     km = KMeans(n_clusters=num_clusters, random_state=2)
     km.fit(tfidf_matrix)
 
     # get cluster words
     cluster_words_dict = get_cluster_words_dict(reviews, vocab_frame, km, num_clusters, terms)
-    cluster_words_dict = manually_define_clusters()
+    # cluster_words_dict = manually_define_clusters()
     final_df = clean_df(df, cluster_words_dict, km, users)
 
+    print "Saving data..."
     # save data to csv
-    outfile = os.path.join('customer_recommender','visualize','static','data.csv')
-    final_df.to_csv(outfile, index = False)
+    outfile = os.path.join('customer_recommender', 'visualize', 'static', 'data.csv')
+    final_df.to_csv(outfile, index=False)
     print "Output saved to {}".format(outfile)
 
 if __name__ == "__main__":

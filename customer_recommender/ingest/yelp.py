@@ -34,9 +34,9 @@ class Yelp(object):
     def __init__(self):
         # self.term = raw_input('What food would you like to search for? ')
         self.term = 'restaurants'
-        self.location = raw_input('What is your location? ').replace(" ","")
+        self.location = raw_input('What is your location? ').replace(" ", "")
         # self.radius = raw_input('What is your search radius (in meters)? ')
-        self.radius = 400
+        self.radius = 1000
 
     def request(self, host, path, url_params=None):
 
@@ -45,7 +45,7 @@ class Yelp(object):
         Args:
             host (str): The domain host of the API.
             path (str): The path of the API after the domain.
-            url_params (dict): An optional set of query parameters in the request.
+            url_params (dict): An optional set of query parameters in request.
         Returns:
             dict: The JSON response from the request.
         Raises:
@@ -65,7 +65,7 @@ class Yelp(object):
                 'oauth_consumer_key': self.CONSUMER_KEY
             }
         )
-        token = oauth2.Token(self.TOKEN,self.TOKEN_SECRET)
+        token = oauth2.Token(self.TOKEN, self.TOKEN_SECRET)
         oauth_request.sign_request(oauth2.SignatureMethod_HMAC_SHA1(), consumer, token)
         signed_url = oauth_request.to_url()
 
@@ -104,7 +104,7 @@ class Yelp(object):
                 'radius_filter': radius,
                 'offset': offset
             }
-            output = self.request(self.API_HOST, self.SEARCH_PATH, url_params = url_params)
+            output = self.request(self.API_HOST, self.SEARCH_PATH, url_params=url_params)
             n_records = len(output['businesses'])
             # last set of businesses
             # if n_records < 20:
@@ -115,7 +115,7 @@ class Yelp(object):
             # append range of ids to list
             for i in range(n_records):
                 # encode to ascii
-                business = unicodedata.normalize('NFKD', output['businesses'][i]['id']).encode('ascii','ignore')
+                business = unicodedata.normalize('NFKD', output['businesses'][i]['id']).encode('ascii', 'ignore')
                 yield business
             # adjust offset
             offset += n_records
@@ -134,8 +134,7 @@ class Yelp(object):
 
         return self.request(self.API_HOST, business_path)
 
-
-    def get_business_url(self, business_id, base = 'http://www.yelp.com/biz/'):
+    def get_business_url(self, business_id, base='http://www.yelp.com/biz/'):
 
         """Takes business_id and returns the url for a business.
 
@@ -144,11 +143,10 @@ class Yelp(object):
         Returns:
             business_url (str): The url for the Yelp business.
 
-        """ 
+        """
 
         business_url = base + business_id
         return business_url
-
 
     def get_number_reviews(self, business_id):
 
@@ -158,15 +156,14 @@ class Yelp(object):
             business_id (str): A unique business id for each Yelp business
         Returns:
             number_reviews (int): The unique number of reviews for a business.
-        """ 
+        """
 
         url = self.get_business_url(business_id)
         soup = get_soup_from_url(url)
-        number_reviews = int(soup.find(itemprop = 'reviewCount').text)
+        number_reviews = int(soup.find(itemprop='reviewCount').text)
         return number_reviews
 
-
-    def get_business_review_info(self, business_id, max_limit = 20):
+    def get_business_review_info(self, business_id, max_limit=20):
 
         """Gets the unique reviews for a business.
 
@@ -174,9 +171,9 @@ class Yelp(object):
             business_id (str): A unique business id for each Yelp business
             max_limit (int): Maximum number of requests that can be retrieved
         Returns:
-            reviews (list): A list of dictionaries. Each dictionary contains a single review by 
+            reviews (list): A list of dictionaries. Each dictionary contains a single review by
             user containing the date, the review, and the rating.
-        """ 
+        """
 
         url = self.get_business_url(business_id)
         new_url = url
@@ -186,12 +183,12 @@ class Yelp(object):
 
         # use a counter to iterate through the url pages
         while counter <= num_reviews:
-            soup = get_soup_from_url(new_url)            
-            for review in soup.find_all(class_ = 'review--with-sidebar'):
+            soup = get_soup_from_url(new_url)
+            for review in soup.find_all(class_='review--with-sidebar'):
                 review_dict = {}
                 # get user info
                 try:
-                    user = review.find(class_ = 'user-display-name').attrs.get('href')
+                    user = review.find(class_='user-display-name').attrs.get('href')
                     review_dict['user'] = user
                 except:
                     pass
@@ -222,7 +219,6 @@ class Yelp(object):
             new_url = '{0}?start={1}'.format(url, counter)
         return reviews
 
-
     def create_business_dictionary(self, business_id):
 
         """Creates a dictionary for a business with the keys: 'name', 'reviews', 'scores'.
@@ -231,14 +227,14 @@ class Yelp(object):
             business_id (str): A unique business id for each Yelp business
         Returns:
             d (dict): A dictionary for a given business
-        """ 
+        """
 
         # creates outputdir and check to see if output path exists
         outputdir = os.path.join(self.OUTPUTDIR, 'business_dicts')
         create_dir(outputdir)
-        output_file = os.path.join(outputdir,'{0}.p'.format(business_id))
+        output_file = os.path.join(outputdir, '{0}.p'.format(business_id))
 
-        #Check to see if file exists
+        # check to see if file exists
         try:
             # if exists load from local
             d = pickle.load(open('{0}'.format(output_file), 'rb'))
@@ -247,14 +243,14 @@ class Yelp(object):
             # get the data from source
             print ("Processing {0} dictionary...").format(business_id)
             d = {}
-            info  = self.get_business(business_id)
+            info = self.get_business(business_id)
             for key, value in info.items():
                 d[key] = value
             # overwrites reviews
             d['reviews'] = self.get_business_review_info(business_id)
             d['id'] = business_id
             pickle.dump(d, open('{0}'.format(output_file), 'wb'))
-            print (">>> Output saved to {0}").format(output_file)      
+            print (">>> Output saved to {0}").format(output_file)
 
     def load_mongodb_data(self, db, collection, business_id):
 
@@ -266,10 +262,10 @@ class Yelp(object):
             business_id (str): A unique business id for each Yelp business
         Returns:
             None
-        """ 
+        """
 
         # load from pickle and insert collection into database
-        f = os.path.join(self.OUTPUTDIR,'business_dicts','{0}.p'.format(business_id))
+        f = os.path.join(self.OUTPUTDIR, 'business_dicts', '{0}.p'.format(business_id))
         with open(f, 'r') as infile:
             dictionary = pickle.load(infile)
             self.COLLECTION.insert_one(dictionary)
@@ -296,6 +292,5 @@ class Yelp(object):
         print ("--- %s seconds ---") % (time.time() - start_time)
         print ("Dictionaries created successfully!")
 
-        
 if __name__ == "__main__":
     Yelp().main()

@@ -1,23 +1,12 @@
 #!/usr/bin/env python
-# food_finder.config
-# Loads configuration data from a YAML file.
-#
-# Author:   Jason Keung <jason.s.keung@gmail.com>
 
 """
 Loads configuration data from a YAML file.
 """
 
-##########################################################################
-## Imports
-##########################################################################
-
 import os
 import yaml
 
-##########################################################################
-## Settings Base Class
-##########################################################################
 
 class Settings(object):
 
@@ -43,9 +32,9 @@ class Settings(object):
         another settings object. Generally speaking, this method is used
         to configure the object from JSON or YAML.
         """
-        if not conf: return                         # Don't do anything with empty conf
+        if not conf:
+            return                         # Don't do anything with empty conf
         self.__dict__.update(conf)                  # Update internal dict with new data
-
 
     def get(self, key, default=None):
         """
@@ -76,13 +65,11 @@ class Settings(object):
         """
         s = ""
         for param in self.__dict__.items():
-            if param[0].startswith('_'): continue
+            if param[0].startswith('_'):
+                continue
             s += "%s: %s\n" % param
         return s
 
-##########################################################################
-## FoodFinder Settings
-##########################################################################
 
 class FoodFinderSettings(Settings):
 
@@ -102,11 +89,6 @@ class FoodFinderSettings(Settings):
         self.consumer_secret = os.environ.get("CONSUMER_SECRET", None)
         self.access_token = os.environ.get("ACCESS_TOKEN", None)
         self.access_token_secret = os.environ.get("ACCESS_TOKEN_SECRET", None)
-
-
-##########################################################################
-## On Import, Load Settings
-##########################################################################
 
 settings = FoodFinderSettings.load()
 if __name__ == '__main__':
