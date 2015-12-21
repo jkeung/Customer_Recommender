@@ -1,4 +1,5 @@
 # Customer Recommender Overview
+
 An app that scrapes all the restaurants within a 1000m radius and will help you find the 'best' customers for your restaurant in your neighborhood!
 
 ## Clone the repository
