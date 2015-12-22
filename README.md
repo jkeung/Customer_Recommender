@@ -63,7 +63,8 @@ Ensure that the MongoDB daemon is running by running: ```$ mongod```
 
 ## Install NLTK dependencies:
 
-```$ python -m nltk.downloader all```
+```$ python -m nltk.downloader all
+```
 
 ## Set your Yelp API Credentials
 
@@ -85,7 +86,8 @@ $ python customer_recommender/visualize/app.py
 
 #### To run via shell script:
 
-```$ source bin/customer_recommender.sh```
+```$ source bin/customer_recommender.sh
+```
 
 
 ## Run Flask App!
