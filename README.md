@@ -63,12 +63,15 @@ https://docs.mongodb.org/manual/installation/
 ```
 
 Ensure that the MongoDB daemon is running by running: 
-```$ mongod
+
+```
+$ mongod
 ```
 
 ## Install NLTK dependencies:
 
-```$ python -m nltk.downloader all
+```
+$ python -m nltk.downloader all
 ```
 
 ## Set your Yelp API Credentials
