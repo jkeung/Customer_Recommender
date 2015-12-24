@@ -86,9 +86,7 @@ Application can be run separately or all at once from a shell script.
 
 ```
 $ python -m customer_recommender.ingest.yelp
-
 $ python -m customer_recommender.wrangle.cluster_data
-
 $ python customer_recommender/visualize/app.py 
 ```
 
