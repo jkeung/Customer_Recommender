@@ -4,8 +4,7 @@ An app that scrapes all the restaurants within a 1000m radius and will help you 
 
 ## Clone the repository
 
-```$ git clone https://github.com/jkeung/Customer_Recommender.git
-```
+```$ git clone https://github.com/jkeung/Customer_Recommender.git```
 
 ## Setup
 
@@ -13,13 +12,11 @@ This code is portable across the following OS's: Linux distributions, Mac and Wi
 
 You are encouraged to use a python virtual environment using virtualenv and pip. 
 
-```$ virtualenv venv
-```
+```$ virtualenv venv```
 
 ### Install requirements:
 
-```$ pip install -r requirements.txt
-```
+```$ pip install -r requirements.txt```
 
 #### Description of modules imported and application
 
