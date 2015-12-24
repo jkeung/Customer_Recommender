@@ -89,15 +89,11 @@ $ python customer_recommender/visualize/app.py
 
 #### To run via shell script:
 
-```$ source bin/customer_recommender.sh
-```
+```$ source bin/customer_recommender.sh```
 
 
 ## Run Flask App!
 
 The Flask app should be visible at the following location: 
 
-```
-http://127.0.0.1:5000/
-```
-
+```http://127.0.0.1:5000/```
