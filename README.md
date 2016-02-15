@@ -91,7 +91,6 @@ $ python customer_recommender/visualize/app.py
 
 ```$ source bin/customer_recommender.sh```
 
-
 ## Run Flask App!
 
 The Flask app should be visible at the following location: 
