@@ -93,6 +93,7 @@ $ python customer_recommender/visualize/app.py
 
 ## Run Flask App!
 
+
 The Flask app should be visible at the following location: 
 
 ``` http://127.0.0.1:5000/ ```
